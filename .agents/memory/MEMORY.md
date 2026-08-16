@@ -1,0 +1,1 @@
+- [Workspace dependency installs](discord-bot-dependency-install.md) — artifact-scoped pnpm add may be required when the package helper targets the workspace root.

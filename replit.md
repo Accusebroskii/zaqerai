@@ -1,6 +1,6 @@
-# [Project name]
+# Zaqerai Optimizations Discord Bot
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Discord bot for Zaqerai Optimizations that shares the community and X profile, publishes service embeds, and creates private support tickets.
 
 ## Run & Operate
 
@@ -10,6 +10,8 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Required secret: `DISCORD_BOT_TOKEN` — the bot token, stored through Replit Secrets
+- Optional env: `DISCORD_GUILD_ID` — registers slash commands to one guild immediately; without it, commands are registered globally
 
 ## Stack
 
@@ -22,23 +24,38 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/src/bot/discordBot.ts` — Discord client, slash commands, service panels, and ticket lifecycle
+- `artifacts/api-server/src/bot/config.ts` — service copy, terms text, public links, colors, and ticket copy
+- `artifacts/api-server/src/index.ts` — starts the API server and Discord client together
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Services are published through slash commands so an administrator can choose the destination channel, ticket category, and embed color each time.
+- Ticket buttons store the chosen category ID on the button, so different service panels can route to different ticket categories.
+- The bot stays disabled when `DISCORD_BOT_TOKEN` is absent; the API health server still starts for safe local development.
+- Slash commands use a guild registration when `DISCORD_GUILD_ID` is present and otherwise fall back to global registration.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- `/join` — share the Zaqerai Optimizations Discord invite.
+- `/x` — share the ZaqeraiTweaks X profile.
+- `/tos channel embed_color` — publish the Terms of Service embed.
+- `/book-optimization channel ticket_channel embed_color` — publish optimization packages with a ticket button.
+- `/overclocking channel ticket_channel embed_color` — publish overclocking packages with a ticket button.
+- `/embed title description` — publish a custom branded embed with optional color, image, and footer.
+- `/giveaway start|end|reroll` — run giveaways with entry buttons, winners, ending, and rerolling.
+- `/ticket setup|customize|close` — create and customize the ticket system or close the current ticket.
+- Ticket buttons create private channels under the selected category and provide a close-ticket action.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep the Zaqerai Optimizations copy and public links in the bot configuration rather than scattering them through command handlers.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The bot needs Discord Developer Portal permissions for `applications.commands`, `View Channels`, `Send Messages`, `Manage Channels`, and `Manage Roles`/permission overwrite access as appropriate.
+- `ticket_channel` means a Discord category. The bot must be able to view and manage that category.
+- Global slash commands can take up to an hour to appear; use `DISCORD_GUILD_ID` while setting up a server for immediate registration.
 
 ## Pointers
 
