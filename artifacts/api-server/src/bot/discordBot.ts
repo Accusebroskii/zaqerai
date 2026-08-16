@@ -1052,10 +1052,10 @@ export function startDiscordBot(): void {
   }
 
   const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+    intents: [GatewayIntentBits.Guilds],
   });
 
-  client.once("ready", async (readyClient) => {
+  client.once("clientReady", async (readyClient) => {
     logger.info({ user: readyClient.user.tag }, "Discord bot connected");
     try {
       const guildId = process.env["DISCORD_GUILD_ID"];
