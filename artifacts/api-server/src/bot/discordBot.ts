@@ -972,6 +972,7 @@ async function handleCommand(interaction: ChatInputCommandInteraction) {
 
     await interaction.reply({
       embeds: [embed],
+      ephemeral: true,
       components: [
         new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
@@ -994,6 +995,7 @@ async function handleCommand(interaction: ChatInputCommandInteraction) {
 
     await interaction.reply({
       embeds: [embed],
+      ephemeral: true,
       components: [
         new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
