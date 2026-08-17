@@ -55,6 +55,7 @@ Discord bot for Zaqerai Optimizations that shares the community and X profile, p
 
 - The bot needs Discord Developer Portal permissions for `applications.commands`, `View Channels`, `Send Messages`, `Manage Channels`, and `Manage Roles`/permission overwrite access as appropriate.
 - For service commands, `ticket_channel` means the existing text channel where users open tickets. `/ticket setup` lets admins select the existing ticket category and panel channel.
+- New private tickets are named `ticket-username-number`, such as `ticket-zagerai-1`, with duplicate-ticket protection per user.
 - Global slash commands can take up to an hour to appear; use `DISCORD_GUILD_ID` while setting up a server for immediate registration.
 
 ## Pointers

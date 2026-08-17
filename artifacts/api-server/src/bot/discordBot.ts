@@ -487,7 +487,8 @@ async function handleTicketOpen(interaction: Interaction) {
   const existingTicket = guild.channels.cache.find(
     (channel) =>
       channel.type === ChannelType.GuildText &&
-      channel.name === `ticket-${interaction.user.id}`,
+      (channel.name === `ticket-${interaction.user.id}` ||
+        channel.topic?.includes(interaction.user.id) === true),
   );
 
   if (existingTicket) {
@@ -519,11 +520,27 @@ async function handleTicketOpen(interaction: Interaction) {
   }
 
   const settings = await getTicketSettings(guild.id);
+  const ticketPrefix = safeChannelName(
+    `ticket-${interaction.user.username}`,
+    "ticket",
+  );
+  let ticketNumber = 1;
+  let ticketName = `${ticketPrefix}-${ticketNumber}`;
+  while (
+    guild.channels.cache.some(
+      (channel) =>
+        channel.type === ChannelType.GuildText && channel.name === ticketName,
+    )
+  ) {
+    ticketNumber += 1;
+    ticketName = `${ticketPrefix}-${ticketNumber}`;
+  }
+
   const ticket = await guild.channels.create({
-    name: `ticket-${interaction.user.id}`,
+    name: ticketName,
     type: ChannelType.GuildText,
     parent: category.id,
-    topic: `Zaqerai support ticket for ${interaction.user.tag}`,
+    topic: `Zaqerai support ticket for ${interaction.user.tag} (${interaction.user.id})`,
     permissionOverwrites: [
       {
         id: guild.roles.everyone.id,
