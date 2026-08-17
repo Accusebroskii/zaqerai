@@ -210,18 +210,20 @@ const commands = [
     .addSubcommand((subcommand) =>
       subcommand
         .setName("setup")
-        .setDescription("Create the ticket category, channel, and ticket panel.")
-        .addStringOption((option) =>
+        .setDescription("Create a ticket panel in a channel using a ticket category.")
+        .addChannelOption((option) =>
           option
-            .setName("category_name")
-            .setDescription("Ticket category name.")
-            .setRequired(false),
+            .setName("category")
+            .setDescription("The category where new tickets should be opened.")
+            .addChannelTypes(ChannelType.GuildCategory)
+            .setRequired(true),
         )
-        .addStringOption((option) =>
+        .addChannelOption((option) =>
           option
-            .setName("channel_name")
-            .setDescription("Ticket panel channel name.")
-            .setRequired(false),
+            .setName("channel")
+            .setDescription("The channel where the ticket panel should be sent.")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
         )
         .addStringOption((option) =>
           option
@@ -612,19 +614,16 @@ async function setupTicketSystem(
     return;
   }
 
-  const categoryName =
-    interaction.options.getString("category_name") ?? "Zaqerai Tickets";
-  const channelName =
-    interaction.options.getString("channel_name") ?? "make-ticket";
-  const category = await interaction.guild.channels.create({
-    name: categoryName,
-    type: ChannelType.GuildCategory,
-  });
-  const panelChannel = await interaction.guild.channels.create({
-    name: safeChannelName(channelName, "make-ticket"),
-    type: ChannelType.GuildText,
-    parent: category.id,
-  });
+  const category = interaction.options.getChannel("category", true);
+  const panelChannel = getTextChannel(interaction, "channel");
+  if (category.type !== ChannelType.GuildCategory || !panelChannel) {
+    await interaction.reply({
+      content: "Choose a ticket category and a text channel for the panel.",
+      ephemeral: true,
+    });
+    return;
+  }
+
   const settings = await getTicketSettings(interaction.guild.id);
   const color = interaction.options.getString("embed_color");
   if (color) {
@@ -637,7 +636,7 @@ async function setupTicketSystem(
     components: [ticketButtonRow(category.id)],
   });
   await interaction.reply({
-    content: `Ticket system created: ${panelChannel} with new tickets under ${category}.`,
+    content: `Ticket panel posted in ${panelChannel}. New tickets will open under ${category}.`,
     ephemeral: true,
   });
 }

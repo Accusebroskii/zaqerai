@@ -44,7 +44,7 @@ Discord bot for Zaqerai Optimizations that shares the community and X profile, p
 - `/overclocking channel ticket_channel embed_color` — publish overclocking packages and replace the make-ticket text with the selected ticket channel.
 - `/embed title description` — publish a custom branded embed with optional color, image, and footer.
 - `/giveaway start|end|reroll` — run giveaways with entry buttons, winners, ending, and rerolling.
-- `/ticket setup|customize|close` — create and customize the ticket system or close the current ticket.
+- `/ticket setup|customize|close` — choose an existing ticket category and panel channel, customize the system, or close the current ticket.
 - Ticket buttons create private channels under the selected category and provide a close-ticket action.
 
 ## User preferences
@@ -54,7 +54,7 @@ Discord bot for Zaqerai Optimizations that shares the community and X profile, p
 ## Gotchas
 
 - The bot needs Discord Developer Portal permissions for `applications.commands`, `View Channels`, `Send Messages`, `Manage Channels`, and `Manage Roles`/permission overwrite access as appropriate.
-- For service commands, `ticket_channel` means the existing text channel where users open tickets. `/ticket setup` creates the ticket category and panel separately.
+- For service commands, `ticket_channel` means the existing text channel where users open tickets. `/ticket setup` lets admins select the existing ticket category and panel channel.
 - Global slash commands can take up to an hour to appear; use `DISCORD_GUILD_ID` while setting up a server for immediate registration.
 
 ## Pointers
