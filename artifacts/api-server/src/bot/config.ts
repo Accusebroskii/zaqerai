@@ -80,7 +80,7 @@ export const optimizationServices = [
   "",
   "This is THE BEST Service to purchase to get Maximum Performance from your PC!",
   "",
-  "#️⃣ 📩 | **make-ticket**",
+  "**make-ticket**",
 ].join("\n");
 
 export const overclockingServices = [

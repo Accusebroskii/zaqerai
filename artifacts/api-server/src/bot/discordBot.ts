@@ -414,7 +414,8 @@ function replaceTicketChannelText(
       /#️⃣ 📩 \| \*\*make-ticket\*\*/g,
       `#️⃣ 📩 | ${ticketChannel}`,
     )
-    .replace(/📩 \| \*\*make-ticket\*\*/g, `📩 | ${ticketChannel}`);
+    .replace(/📩 \| \*\*make-ticket\*\*/g, `📩 | ${ticketChannel}`)
+    .replace(/\*\*make-ticket\*\*/g, `${ticketChannel}`);
 }
 
 async function publishTerms(interaction: ChatInputCommandInteraction) {
