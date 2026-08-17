@@ -40,8 +40,8 @@ Discord bot for Zaqerai Optimizations that shares the community and X profile, p
 - `/join` — share the Zaqerai Optimizations Discord invite.
 - `/x` — share the ZaqeraiTweaks X profile.
 - `/tos channel embed_color` — publish the Terms of Service embed.
-- `/book-optimization channel ticket_channel embed_color` — publish optimization packages with a ticket button.
-- `/overclocking channel ticket_channel embed_color` — publish overclocking packages with a ticket button.
+- `/book-optimization channel ticket_channel embed_color` — publish optimization packages and replace the make-ticket text with the selected ticket channel.
+- `/overclocking channel ticket_channel embed_color` — publish overclocking packages and replace the make-ticket text with the selected ticket channel.
 - `/embed title description` — publish a custom branded embed with optional color, image, and footer.
 - `/giveaway start|end|reroll` — run giveaways with entry buttons, winners, ending, and rerolling.
 - `/ticket setup|customize|close` — create and customize the ticket system or close the current ticket.
@@ -54,7 +54,7 @@ Discord bot for Zaqerai Optimizations that shares the community and X profile, p
 ## Gotchas
 
 - The bot needs Discord Developer Portal permissions for `applications.commands`, `View Channels`, `Send Messages`, `Manage Channels`, and `Manage Roles`/permission overwrite access as appropriate.
-- `ticket_channel` means a Discord category. The bot must be able to view and manage that category.
+- For service commands, `ticket_channel` means the existing text channel where users open tickets. `/ticket setup` creates the ticket category and panel separately.
 - Global slash commands can take up to an hour to appear; use `DISCORD_GUILD_ID` while setting up a server for immediate registration.
 
 ## Pointers

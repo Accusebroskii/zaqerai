@@ -55,8 +55,8 @@ const commands = [
     .addChannelOption((option) =>
       option
         .setName("ticket_channel")
-        .setDescription("The category where new private tickets should be created.")
-        .addChannelTypes(ChannelType.GuildCategory)
+        .setDescription("The existing channel where users open tickets.")
+        .addChannelTypes(ChannelType.GuildText)
         .setRequired(true),
     )
     .addStringOption((option) =>
@@ -102,8 +102,8 @@ const commands = [
     .addChannelOption((option) =>
       option
         .setName("ticket_channel")
-        .setDescription("The category where new private tickets should be created.")
-        .addChannelTypes(ChannelType.GuildCategory)
+        .setDescription("The existing channel where users open tickets.")
+        .addChannelTypes(ChannelType.GuildText)
         .setRequired(true),
     )
     .addStringOption((option) =>
@@ -403,6 +403,18 @@ function getCurrentTextChannel(
     : null;
 }
 
+function replaceTicketChannelText(
+  description: string,
+  ticketChannel: TextChannel,
+): string {
+  return description
+    .replace(
+      /#️⃣ 📩 \| \*\*make-ticket\*\*/g,
+      `#️⃣ 📩 | ${ticketChannel}`,
+    )
+    .replace(/📩 \| \*\*make-ticket\*\*/g, `📩 | ${ticketChannel}`);
+}
+
 async function publishTerms(interaction: ChatInputCommandInteraction) {
   const channel = getTextChannel(interaction, "channel");
   if (!channel) {
@@ -436,11 +448,11 @@ async function publishServices(
   title: string,
 ) {
   const channel = getTextChannel(interaction, "channel");
-  const ticketCategory = interaction.options.getChannel("ticket_channel", true);
+  const ticketChannel = getTextChannel(interaction, "ticket_channel");
 
-  if (!channel || ticketCategory.type !== ChannelType.GuildCategory) {
+  if (!channel || !ticketChannel) {
     await interaction.reply({
-      content: "Please choose a text channel and a ticket category.",
+      content: "Please choose a text channel and an existing ticket channel.",
       ephemeral: true,
     });
     return;
@@ -452,16 +464,13 @@ async function publishServices(
   const embed = new EmbedBuilder()
     .setColor(color)
     .setTitle(title)
-    .setDescription(description)
-    .setFooter({ text: "Use the button below to contact Zaqerai Optimizations." })
+    .setDescription(replaceTicketChannelText(description, ticketChannel))
+    .setFooter({ text: "Zaqerai Optimizations" })
     .setTimestamp();
 
-  await channel.send({
-    embeds: [embed],
-    components: [ticketButtonRow(ticketCategory.id)],
-  });
+  await channel.send({ embeds: [embed] });
   await interaction.reply({
-    content: `${title} panel posted in ${channel}. New tickets will be created in ${ticketCategory}.`,
+    content: `${title} panel posted in ${channel}. The ticket link points to ${ticketChannel}.`,
     ephemeral: true,
   });
 }
@@ -501,7 +510,7 @@ async function handleTicketOpen(interaction: Interaction) {
   if (!category || category.type !== ChannelType.GuildCategory) {
     await interaction.reply({
       content:
-        "The ticket category is not configured yet. Ask an administrator to set DISCORD_TICKET_CATEGORY_ID or publish a services panel with /book-optimization or /overclocking.",
+        "The ticket category is not configured yet. Ask an administrator to run /ticket setup first.",
       ephemeral: true,
     });
     return;
