@@ -7,13 +7,17 @@ import {
   EmbedBuilder,
   GatewayIntentBits,
   PermissionFlagsBits,
+  Partials,
   REST,
   Routes,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
+  type ForumChannel,
   type Guild,
   type Interaction,
+  type Message,
   type TextChannel,
+  type ThreadChannel,
 } from "discord.js";
 import { logger } from "../lib/logger";
 import {
@@ -33,11 +37,18 @@ import { fileURLToPath } from "node:url";
 const TICKET_BUTTON_ID = "zaqerai:open-ticket";
 const CLOSE_BUTTON_ID = "zaqerai:close-ticket";
 const GIVEAWAY_BUTTON_PREFIX = "zaqerai:giveaway:";
+const MODMAIL_OWNER_ID = "1375707337104429088";
 const TICKET_CONFIG_PATH =
   process.env["TICKET_CONFIG_PATH"] ??
   path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     "../data/ticket-config.json",
+  );
+const MODMAIL_CONFIG_PATH =
+  process.env["MODMAIL_CONFIG_PATH"] ??
+  path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../data/modmail-config.json",
   );
 
 const commands = [
@@ -278,6 +289,26 @@ const commands = [
         .setName("close")
         .setDescription("Close the ticket channel you are currently in."),
     ),
+  new SlashCommandBuilder()
+    .setName("modmail")
+    .setDescription("Manage private DM support messages.")
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("setup")
+        .setDescription("Choose the forum where private modmails are created.")
+        .addChannelOption((option) =>
+          option
+            .setName("forum")
+            .setDescription("The private forum channel for modmail threads.")
+            .addChannelTypes(ChannelType.GuildForum)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("close")
+        .setDescription("Close the modmail thread you are currently in."),
+    ),
 ];
 
 function parseEmbedColor(input: string | null): number {
@@ -304,8 +335,14 @@ type GiveawayState = {
   timer?: ReturnType<typeof setTimeout>;
 };
 
+type ModmailConfig = {
+  forumId: string;
+  ownerId: string;
+};
+
 const giveaways = new Map<string, GiveawayState>();
 const ticketSettingsCache = new Map<string, TicketSettings>();
+const modmailConfigCache = new Map<string, ModmailConfig | null>();
 
 async function getTicketSettings(guildId: string): Promise<TicketSettings> {
   const cached = ticketSettingsCache.get(guildId);
@@ -350,6 +387,44 @@ async function saveTicketSettings(
   data[guildId] = settings;
   await mkdir(path.dirname(TICKET_CONFIG_PATH), { recursive: true });
   await writeFile(TICKET_CONFIG_PATH, JSON.stringify(data, null, 2), "utf8");
+}
+
+async function getModmailConfig(
+  guildId: string,
+): Promise<ModmailConfig | null> {
+  if (modmailConfigCache.has(guildId)) {
+    return modmailConfigCache.get(guildId) ?? null;
+  }
+
+  try {
+    const data = JSON.parse(
+      await readFile(MODMAIL_CONFIG_PATH, "utf8"),
+    ) as Record<string, ModmailConfig>;
+    const config = data[guildId] ?? null;
+    modmailConfigCache.set(guildId, config);
+    return config;
+  } catch {
+    modmailConfigCache.set(guildId, null);
+    return null;
+  }
+}
+
+async function saveModmailConfig(
+  guildId: string,
+  config: ModmailConfig,
+): Promise<void> {
+  modmailConfigCache.set(guildId, config);
+  let data: Record<string, ModmailConfig> = {};
+  try {
+    data = JSON.parse(
+      await readFile(MODMAIL_CONFIG_PATH, "utf8"),
+    ) as Record<string, ModmailConfig>;
+  } catch {
+    data = {};
+  }
+  data[guildId] = config;
+  await mkdir(path.dirname(MODMAIL_CONFIG_PATH), { recursive: true });
+  await writeFile(MODMAIL_CONFIG_PATH, JSON.stringify(data, null, 2), "utf8");
 }
 
 function ticketButtonRow(categoryId: string): ActionRowBuilder<ButtonBuilder> {
