@@ -1142,98 +1142,86 @@ function modmailCloseButton(
   );
 }
 
-const modmailCreationLocks = new Map<string, Promise<ThreadChannel | null>>();
-
 async function createModmailThread(
   guild: Guild,
   userId: string,
   username: string,
   firstMessage: Message,
 ): Promise<ThreadChannel | null> {
-  const existingLock = modmailCreationLocks.get(userId);
+  const config = await getModmailConfig(guild.id);
 
-  if (existingLock) {
-    return existingLock;
+  if (!config) {
+    return null;
   }
 
-  const creation = (async (): Promise<ThreadChannel | null> => {
-    const config = await getModmailConfig(guild.id);
+  const forum = guild.channels.cache.get(config.forumId);
 
-    if (!config) {
-      return null;
+  if (!forum || forum.type !== ChannelType.GuildForum) {
+    return null;
+  }
+
+  const existing = activeModmails.get(userId);
+
+  if (existing) {
+    const existingChannel = guild.channels.cache.get(existing.threadId);
+
+    if (existingChannel?.isThread()) {
+      return existingChannel as ThreadChannel;
     }
 
-    const forum = guild.channels.cache.get(config.forumId);
+    activeModmails.delete(userId);
+    modmailUsers.delete(existing.threadId);
+  }
 
-    if (!forum || forum.type !== ChannelType.GuildForum) {
-      return null;
-    }
-
-    const existing = activeModmails.get(userId);
-
-    if (existing) {
-      const existingChannel = guild.channels.cache.get(existing.threadId);
-
-      if (existingChannel?.isThread()) {
-        return existingChannel as ThreadChannel;
-      }
-
-      activeModmails.delete(userId);
-      modmailUsers.delete(existing.threadId);
-    }
-
-    const thread = await forum.threads.create({
-      name: `${config.threadPrefix}${safeChannelName(username, "user")}`,
-      message: {
-        embeds: [
-          new EmbedBuilder()
-            .setColor(config.embedColor)
-            .setTitle(config.title)
-            .setDescription(
-              config.description
-                .replaceAll("{username}", username)
-                .replaceAll("{userid}", userId),
-            )
-            .setFooter({
-              text: config.footer,
-            })
-            .setTimestamp(),
-        ],
-        components: [modmailCloseButton(userId)],
-      },
-    });
-
-    activeModmails.set(userId, {
-      guildId: guild.id,
-      userId,
-      threadId: thread.id,
-    });
-
-    modmailUsers.set(thread.id, userId);
-
-    await thread.send({
+  const thread = await forum.threads.create({
+    name: `${config.threadPrefix}${safeChannelName(username, "user")}`,
+    message: {
       embeds: [
         new EmbedBuilder()
-          .setColor(DEFAULT_EMBED_COLOR)
-          .setTitle("📨 User Message")
-          .setDescription(firstMessage.content || "*No text content*")
+          .setColor(config.embedColor)
+          .setTitle(config.title)
+          .setDescription(
+            config.description
+              .replaceAll("{username}", username)
+              .replaceAll("{userid}", userId),
+          )
           .setFooter({
-            text: `User • ${username}`,
+            text: config.footer,
           })
           .setTimestamp(),
       ],
-    });
+      components: [modmailCloseButton(userId)],
+    },
+  });
 
-    return thread;
-  })();
+  activeModmails.set(userId, {
+    guildId: guild.id,
+    userId,
+    threadId: thread.id,
+  });
 
-  modmailCreationLocks.set(userId, creation);
+  modmailUsers.set(thread.id, userId);
 
-  try {
-    return await creation;
-  } finally {
-    modmailCreationLocks.delete(userId);
-  }
+  await thread.send({
+    embeds: [
+      new EmbedBuilder()
+        .setColor(DEFAULT_EMBED_COLOR)
+        .setTitle("📨 User Message")
+        .setDescription(firstMessage.content || "*No text content*")
+        .addFields({
+          name: "User",
+          value: `<@${userId}>`,
+          inline: true,
+        })
+        .setFooter({
+          text: `User ID: ${userId}`,
+        })
+        .setTimestamp(),
+    ],
+    files: [...firstMessage.attachments.values()],
+  });
+
+  return thread;
 }
 
 async function handleModmailDM(message: Message): Promise<void> {
@@ -1751,34 +1739,6 @@ export function startDiscordBot(): void {
 
   client.once("clientReady", async (readyClient) => {
     logger.info({ user: readyClient.user.tag }, "Discord bot connected");
-    // ZAQERAI_ROTATING_STATUS
-    const rotatingStatuses = [
-      "discord.gg/zaqerai",
-      "Zaqerai working",
-      "the Zaqerai community",
-      "new members",
-      "Zaqerai services",
-    ];
-
-    let statusIndex = 0;
-
-    const updateBotStatus = () => {
-      readyClient.user.setPresence({
-        activities: [
-          {
-            name: rotatingStatuses[statusIndex],
-            type: 3,
-          },
-        ],
-        status: "online",
-      });
-
-      statusIndex = (statusIndex + 1) % rotatingStatuses.length;
-    };
-
-    updateBotStatus();
-    setInterval(updateBotStatus, 30_000);
-
     try {
       const guildId = process.env["DISCORD_GUILD_ID"];
       if (guildId) {

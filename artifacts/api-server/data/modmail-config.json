@@ -1,0 +1,12 @@
+{
+  "1523751632955899994": {
+    "forumId": "1524138392437395667",
+    "ownerId": "1375707337104429088",
+    "title": "📩 New Support Request",
+    "description": "A new support request has been received.  👤 **User:** {username} 🆔 **User ID:** {userid}  💬 The user's messages will appear below. Please respond professionally and assist them as soon as possible.",
+    "footer": "Zaqerai Optimizations • Support",
+    "embedColor": 139,
+    "threadPrefix": "📩・",
+    "openMessage": "📩 **Support Request Opened**  Thank you for contacting **Zaqerai Optimizations Support**!  Your message has been forwarded to our support team. Please wait while a staff member reviews your request.  💬 You will receive their replies directly here in your DMs."
+  }
+}
